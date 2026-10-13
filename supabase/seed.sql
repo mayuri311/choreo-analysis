@@ -26,6 +26,9 @@ select
   '{"provider":"email","providers":["email"]}', '{}', now(), now(), '', '', '', ''
 from u;
 
+-- dev users have already chosen their password
+update public.profiles set password_set = true where email like '%@team.test';
+
 insert into auth.identities (id, user_id, provider_id, identity_data, provider, last_sign_in_at, created_at, updated_at)
 select gen_random_uuid(), id, id::text, jsonb_build_object('sub', id::text, 'email', email), 'email', now(), now(), now()
 from auth.users where email like '%@team.test';

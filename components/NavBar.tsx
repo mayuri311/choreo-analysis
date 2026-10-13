@@ -30,6 +30,7 @@ export async function NavBar() {
             {me.role === "captain" && (
               <span className="rounded bg-gold-light px-1.5 py-0.5 text-xs text-[#7a5d00]">captain</span>
             )}
+            <Link href="/account/password" className="text-muted hover:text-ink">Password</Link>
             <form action="/auth/signout" method="post">
               <button className="text-muted hover:text-ink">Sign out</button>
             </form>

@@ -129,5 +129,18 @@ try {
   check("uninvited signup is blocked", /invite list/.test(e.message), e.message);
 }
 
-console.log(failures ? `\n${failures} FAILED` : "\nall passed");
+// a new account (created by a captain's invite) must choose a password before using the app
+await db.exec("insert into allowed_emails (email, display_name) values ('newbie@team.test', 'Newbie')");
+U.newbie = (await db.query(
+  "insert into auth.users (id, email, encrypted_password) values (gen_random_uuid(), 'newbie@team.test', crypt(gen_random_uuid()::text, gen_salt('bf'))) returning id",
+)).rows[0].id;
+r = await as("newbie", "select password_set from profiles where id = $1", [U.newbie]);
+check("new account must still choose a password", r.rows?.[0]?.password_set === false, r);
+r = await as("newbie", "update profiles set password_set = true where id = $1", [U.newbie]);
+check("can't mark password as set by updating the profile directly", !!r.error, r);
+await as("newbie", "select mark_password_set()");
+r = await as("ravi", "select password_set from profiles where id = $1", [U.newbie]);
+check("mark_password_set sets the caller's flag", r.rows?.[0]?.password_set === true, r);
+
+console.log(failures ?`\n${failures} FAILED` : "\nall passed");
 process.exit(failures ? 1 : 0);

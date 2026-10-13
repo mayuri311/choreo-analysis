@@ -16,17 +16,9 @@ async function Admin() {
   const me = await getCurrentProfile();
   if (me.role !== "captain") redirect("/");
   const supabase = await createClient();
-  const [invites, profiles, songs] = await Promise.all([
-    supabase.from("allowed_emails").select("*").order("email"),
-    supabase.from("profiles").select("id, email, display_name, role, color").order("display_name"),
+  const [profiles, songs] = await Promise.all([
+    supabase.from("profiles").select("id, email, display_name, role, color, password_set").order("display_name"),
     supabase.from("songs").select("id, title, jathis(id, name, position)").order("title"),
   ]);
-  return (
-    <AdminPanel
-      me={me}
-      invites={invites.data ?? []}
-      profiles={profiles.data ?? []}
-      songs={songs.data ?? []}
-    />
-  );
+  return <AdminPanel me={me} profiles={profiles.data ?? []} songs={songs.data ?? []} />;
 }
