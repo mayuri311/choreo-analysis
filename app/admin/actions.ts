@@ -8,6 +8,8 @@ import type { Role } from "@/lib/types";
 
 type Result = { error: string } | { ok: string };
 
+const NO_KEY = { error: "SUPABASE_SERVICE_ROLE_KEY isn't set on the server. Add it to .env.local / Vercel." };
+
 async function requireCaptain() {
   const me = await getCurrentProfile();
   if (me.role !== "captain") throw new Error("Only captains can manage the team");
@@ -20,6 +22,7 @@ async function requireCaptain() {
  * The first time they visit, they claim it by choosing a password (see app/login/actions.ts).
  */
 export async function inviteMember(input: { email: string; name: string; role: Role }): Promise<Result> {
+  if (!process.env.SUPABASE_SERVICE_ROLE_KEY) return NO_KEY;
   await requireCaptain();
   const email = input.email.trim().toLowerCase();
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return { error: "That email doesn't look right." };
@@ -45,6 +48,7 @@ export async function inviteMember(input: { email: string; name: string; role: R
  * Forgot password: scramble the old one and let them set it up again with "First time here?".
  */
 export async function resetPassword(userId: string): Promise<Result> {
+  if (!process.env.SUPABASE_SERVICE_ROLE_KEY) return NO_KEY;
   const me = await requireCaptain();
   if (userId === me.id) return { error: "Change your own password from the Password page." };
 
@@ -59,6 +63,7 @@ export async function resetPassword(userId: string): Promise<Result> {
 
 /** Remove someone who was invited but never finished setting up. */
 export async function removePendingMember(userId: string): Promise<Result> {
+  if (!process.env.SUPABASE_SERVICE_ROLE_KEY) return NO_KEY;
   const me = await requireCaptain();
   if (userId === me.id) return { error: "You can't remove yourself." };
 

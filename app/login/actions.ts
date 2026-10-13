@@ -9,7 +9,7 @@ import { createClient } from "@/lib/supabase/server";
  * No email is sent, so this trusts that whoever types an unclaimed team email is that
  * person; captains can see who has set up on the Team page and reset if needed.
  */
-export async function claimAccount(input: {
+async function claim(input: {
   email: string;
   password: string;
 }): Promise<{ error: string } | { ok: true }> {
@@ -48,4 +48,20 @@ export async function claimAccount(input: {
   const { error: signInErr } = await supabase.auth.signInWithPassword({ email, password: input.password });
   if (signInErr) return { error: signInErr.message };
   return { ok: true };
+}
+
+export async function claimAccount(input: {
+  email: string;
+  password: string;
+}): Promise<{ error: string } | { ok: true }> {
+  try {
+    return await claim(input);
+  } catch (e) {
+    console.error("claimAccount failed:", e);
+    const msg = e instanceof Error ? e.message : String(e);
+    if (/SUPABASE_SERVICE_ROLE_KEY/.test(msg)) {
+      return { error: "Account setup isn't configured on the server yet (missing service role key). Tell a captain." };
+    }
+    return { error: "Something went wrong setting up your account. Try again." };
+  }
 }

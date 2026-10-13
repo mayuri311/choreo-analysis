@@ -27,7 +27,12 @@ export function AdminPanel({ me, profiles, songs }: { me: Profile; profiles: Mem
   }
 
   async function act(p: Promise<{ error: string } | { ok: string }>) {
-    const r = await p;
+    // a thrown server error (e.g. missing service role key) would otherwise fail silently
+    const r = await p.catch((e: unknown) => ({
+      error: /SUPABASE_SERVICE_ROLE_KEY/.test(String(e))
+        ? "SUPABASE_SERVICE_ROLE_KEY isn't set on the server. Add it to .env.local / Vercel."
+        : "Something went wrong. Try again.",
+    }));
     setError("error" in r ? r.error : null);
     setNotice("ok" in r ? r.ok : null);
     if ("ok" in r) router.refresh();

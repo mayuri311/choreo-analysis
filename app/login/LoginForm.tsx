@@ -34,7 +34,10 @@ function Form() {
 
     if (mode === "setup") {
       setStep("Setting up your account…");
-      const res = await claimAccount({ email, password }); // also signs you in
+      // also signs you in; a network failure throws instead of returning an error
+      const res = await claimAccount({ email, password }).catch(() => ({
+        error: "Couldn't reach the server. Check your connection and try again.",
+      }));
       if ("error" in res) {
         setBusy(false);
         return setError(res.error);
