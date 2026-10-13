@@ -1,14 +1,9 @@
 import Link from "next/link";
-import { createClient } from "@/lib/supabase/server";
+import { getSessionProfile } from "@/lib/auth";
 import { Avatar } from "./Avatar";
 
 export async function NavBar() {
-  const supabase = await createClient();
-  const { data } = await supabase.auth.getClaims();
-  const userId = data?.claims?.sub;
-  const { data: me } = userId
-    ? await supabase.from("profiles").select("id, display_name, role, color").eq("id", userId).single()
-    : { data: null };
+  const me = await getSessionProfile();
 
   return (
     <header className="h-14 border-b border-line bg-white">
@@ -18,9 +13,17 @@ export async function NavBar() {
         </Link>
         {me && (
           <nav className="flex items-center gap-4 text-sm text-muted">
-            <Link href="/" className="hover:text-ink">Dashboard</Link>
-            <Link href="/videos/new" className="hover:text-ink">Add video</Link>
-            {me.role === "captain" && <Link href="/admin" className="hover:text-ink">Team</Link>}
+            <Link href="/" className="hover:text-ink">
+              Dashboard
+            </Link>
+            <Link href="/videos/new" className="hover:text-ink">
+              Add video
+            </Link>
+            {me.role === "captain" && (
+              <Link href="/admin" className="hover:text-ink">
+                Team
+              </Link>
+            )}
           </nav>
         )}
         {me && (
@@ -30,7 +33,9 @@ export async function NavBar() {
             {me.role === "captain" && (
               <span className="rounded bg-gold-light px-1.5 py-0.5 text-xs text-[#7a5d00]">captain</span>
             )}
-            <Link href="/account/password" className="text-muted hover:text-ink">Password</Link>
+            <Link href="/account/password" className="text-muted hover:text-ink">
+              Password
+            </Link>
             <form action="/auth/signout" method="post">
               <button className="text-muted hover:text-ink">Sign out</button>
             </form>
